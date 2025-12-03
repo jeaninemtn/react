@@ -12,7 +12,7 @@
 }
 
 * {
-    @apply font-sans
+    @apply font-sans box-border
 }
 
 #root {
