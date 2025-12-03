@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+:root {
+    --text: #1D232C;
+    --bg: #F5F5F5;
+
+}
+
+.dark {
+    --text: #F5F5F5;
+    --bg: #1D232C;
+}
+
+* {
+    @apply font-sans
+}
+
+#root {
+    @apply w-screen h-screen bg-(--bg)
+}
+
+nav,
+.content {
+    @apply border-2 rounded-2xl
+}
+
+nav a {
+    @apply text-xl text-(--text)
+}
