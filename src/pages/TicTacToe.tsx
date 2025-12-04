@@ -4,7 +4,28 @@
 
 import { useState, type SetStateAction } from 'react';
 
-function Square({ value, onSquareClick }) {
+/*
+
+useState
+
+Syntax:
+const [value, setValue] = useState(null);
+
+value: 目前的值
+setValue: 改變值(value)的方法 & 觸發re render dom
+null: 初始值為null
+return: 一個陣列
+
+https://www.w3schools.com/react/react_usestate.asp
+
+*/
+
+interface SquareProps {
+	value: string | null;
+	onSquareClick: () => void;
+};
+
+function Square({ value, onSquareClick }: SquareProps) {
 	return (
 		<button className="size-12 border" onClick={onSquareClick}>
 			{value}
@@ -12,17 +33,52 @@ function Square({ value, onSquareClick }) {
 	);
 }
 
-function Board({ xIsNext, squares, onPlay }) {
+// 用type
+// type BoardProps = {
+// 	xIsNext: boolean;
+// 	squares: (string | null)[];
+// 	onPlay: (nextSquares: (string | null)[]) => void;
+// };
+
+// 用interface
+interface BoardProps {
+	xIsNext: boolean;
+	squares: Array<string | null>;
+	onPlay: (nextSquares: Array<string | null>) => void;
+};
+
+function Board({ xIsNext, squares, onPlay }: BoardProps) {
+
+	/* 1. ES6解構語法
+	function Board(props) {
+		const xIsNext = props.xIsNext;	// boolean	現在輪到X嗎
+		const squares = props.squares;	// array	現在的棋盤狀態
+		const onPlay = props.onPlay;	// function	更新棋盤
+	}
+	*/
+
+	// 每個square被點擊之後 會將自己的index傳入這個function
 	function handleClick(i: number) {
+
+		// 判斷是不是能繼續下棋
+		// 不能的狀況:
+		// 1. 已有贏家
+		// 2. 該格子已經有棋子
 		if (calculateWinner(squares) || squares[i]) {
 			return;
 		}
+
+		// 複製一份squares 不直接修改原本的state
 		const nextSquares = squares.slice();
+
+		// 現在輪到誰下棋 就顯示誰的名字
 		if (xIsNext) {
 			nextSquares[i] = 'X';
 		} else {
 			nextSquares[i] = 'O';
 		}
+
+		// 讓父元件更新資料
 		onPlay(nextSquares);
 	}
 
@@ -36,7 +92,7 @@ function Board({ xIsNext, squares, onPlay }) {
 
 	return (
 		<>
-			<div className="status">{status}</div>
+			<div className="status mb-4">{status}</div>
 			<div className="flex">
 				<Square value={squares[0]} onSquareClick={() => handleClick(0)} />
 				<Square value={squares[1]} onSquareClick={() => handleClick(1)} />
@@ -56,6 +112,7 @@ function Board({ xIsNext, squares, onPlay }) {
 	);
 }
 
+// 計算誰是贏家
 function calculateWinner(squares: any[]) {
 	// 贏的方式 有9種
 	const lines = [
@@ -80,21 +137,98 @@ function calculateWinner(squares: any[]) {
 }
 
 export default function Game() {
+
+	// 1. 對弈歷史紀錄
+	// history = 初始值 (9個null) 因為遊戲尚未開始
+	// [[null, null, null, ... , null]]
 	const [history, setHistory] = useState([Array(9).fill(null)]);
+
+	// 2. 目前下到第幾步
+	// currentMove = 初始值 0 => 遊戲尚未開始
 	const [currentMove, setCurrentMove] = useState(0);
+
+	// 3. 偶數步輪到選手X 奇數步輪到選手O
 	const xIsNext = currentMove % 2 === 0;
+
+	// 4. 取得目前這一步的遊戲狀態
+	// 第0步: 全部是null
+	// 第1步: 某一個是X
+	// 第2步: 某一個是X 某一個是O
 	const currentSquares = history[currentMove];
 
+	/* 下棋的過程: 
+
+	// 初始狀態
+	history = [
+			[null, null, null, null, null, null, null, null, null],  // step 0
+	];
+	currentMove = 0;
+	xIsNext = true;
+	currentSquares = [null, null, null, null, null, null, null, null, null];
+
+
+	// 第一步
+	history = [
+			[null, null, null, null, null, null, null, null, null],  // step 0
+			['X', null, null, null, null, null, null, null, null],   // step 1
+	];
+	currentMove = 1;
+	xIsNext = false;
+	currentSquares = ['X', null, null, null, null, null, null, null, null];
+
+
+	// 第二步
+	history = [
+			[null, null, null, null, null, null, null, null, null],  // step 0
+			['X', null, null, null, null, null, null, null, null],   // step 1
+		['X', null, null, null, 'O', null, null, null, null]     // step 2
+	];
+	currentMove = 2;
+	xIsNext = true;
+	currentSquares = ['X', null, null, null, 'O', null, null, null, null];
+	*/
+
+
+	// 下棋 + 更新歷史
 	function handlePlay(nextSquares: any) {
+
+		// 1. 產生新的棋盤
+
+		/*
+		slice(start, end) → 取陣列的一部分
+		這邊用來保證 如果跳回過去某一步再下棋，之後的歷史會被截掉
+
+		history = [
+			[null, null, null, null, null, null, null, null, null],   // step 0
+			['X', null, null, null, null, null, null, null, null],    // step 1
+			['X', null, null, null, 'O', null, null, null, null]      // step 2
+		];
+
+		假設currentMove = 1;
+		history.slice(0, currentMove + 1) → history.slice(0, 2)
+		取第 0、1 步：
+
+		[
+			[null, null, null, null, null, null, null, null, null], 
+			['X', null, null, null, null, null, null, null, null]
+		]
+		*/
+
+		// nextSquares: 新的棋盤狀態
 		const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+		// 2. 更新下棋紀錄
 		setHistory(nextHistory);
+		// 3. 設定目前走到第幾步
 		setCurrentMove(nextHistory.length - 1);
 	}
 
+	// 把目前步數改成指定步數 不改歷史 (倒退一步or跳到某一步)
 	function jumpTo(nextMove: SetStateAction<number>) {
 		setCurrentMove(nextMove);
 	}
 
+	// 產生每一步的按鈕
+	// 每個按鈕都可以回到那一步
 	const moves = history.map((squares, move) => {
 		let description;
 		if (move > 0) {
@@ -110,12 +244,12 @@ export default function Game() {
 	});
 
 	return (
-		<div className="game">
+		<div className="flex gap-8">
 			<div className="game-board">
 				<Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
 			</div>
-			<div className="game-info">
-				<ol>{moves}</ol>
+			<div>
+				<ol className="space-y-2">{moves}</ol>
 			</div>
 		</div>
 	);
