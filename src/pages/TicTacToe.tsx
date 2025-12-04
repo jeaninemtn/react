@@ -71,14 +71,15 @@ function Board({ xIsNext, squares, onPlay }: BoardProps) {
 		// 複製一份squares 不直接修改原本的state
 		const nextSquares = squares.slice();
 
-		// 現在輪到誰下棋 就顯示誰的名字
+		// 下棋 在棋盤上留下誰下的棋
+		// 在棋盤位置上 紀錄是誰下的棋
 		if (xIsNext) {
 			nextSquares[i] = 'X';
 		} else {
 			nextSquares[i] = 'O';
 		}
 
-		// 讓父元件更新資料
+		// 讓父元件更新歷史資料
 		onPlay(nextSquares);
 	}
 
@@ -147,7 +148,9 @@ export default function Game() {
 	// currentMove = 初始值 0 => 遊戲尚未開始
 	const [currentMove, setCurrentMove] = useState(0);
 
-	// 3. 偶數步輪到選手X 奇數步輪到選手O
+	// 3. 
+	// 偶數步: 選手X 
+	// 奇數步: 選手O
 	const xIsNext = currentMove % 2 === 0;
 
 	// 4. 取得目前這一步的遊戲狀態
@@ -215,9 +218,12 @@ export default function Game() {
 		*/
 
 		// nextSquares: 新的棋盤狀態
+		// 加入新的棋盤紀錄
 		const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+
 		// 2. 更新下棋紀錄
 		setHistory(nextHistory);
+
 		// 3. 設定目前走到第幾步
 		setCurrentMove(nextHistory.length - 1);
 	}
@@ -229,7 +235,9 @@ export default function Game() {
 
 	// 產生每一步的按鈕
 	// 每個按鈕都可以回到那一步
-	const moves = history.map((squares, move) => {
+	const moves = history.map((_squares: string[], move: number) => {
+		// _squares是棋盤
+		// move是步數
 		let description;
 		if (move > 0) {
 			description = 'Go to move #' + move;
@@ -245,7 +253,7 @@ export default function Game() {
 
 	return (
 		<div className="flex gap-8">
-			<div className="game-board">
+			<div>
 				<Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
 			</div>
 			<div>
