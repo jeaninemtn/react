@@ -2,6 +2,8 @@ import { Outlet } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 
+
+
 function App() {
   return (
     <div className="flex flex-col size-full p-4 space-y-4">
